@@ -19,7 +19,7 @@ public class Extended {
                     <xs:complexType>
                         <xs:sequence>
                             <!-- Define elements for package information -->
-                            <xs:element name="package">
+                            <xs:element maxOccurs="unbounded" name="package">
                                 <xs:complexType>
                                     <xs:sequence>
                                         <xs:element name="packageName" type="xs:string"/>

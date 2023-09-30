@@ -31,12 +31,14 @@ public class Uloz extends HttpServlet{
                 "<isCrashed>" + (isCrashed != null ? "true" : "false") + "</isCrashed>";
 
         if (selectedPackages != null) {
+            xmlData += "<packages>";
             for (String packageValue : selectedPackages) {
-                xmlData += "<packages><package>" +
+                xmlData += "<package>" +
                         "<packageName>" + packageValue + "</packageName>" +
                         "<packageDescription>Package Description Goes Here</packageDescription>" +
-                        "</package></packages>";
+                        "</package>";
             }
+            xmlData += "</packages>";
         }
 
         xmlData += "</car>";
