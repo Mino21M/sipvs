@@ -29,8 +29,8 @@
 
         <!-- formular pre validaciu -->
         <form action="/validuj" method="post" enctype="multipart/form-data">
-            <label for="file">Upload a File:</label>
-            <input type="file" id="file" name="uploadedFile"><br>
+            <label for="validuj">Upload a File:</label>
+            <input type="file" id="validuj" name="uploadedFile"><br>
 
             <input type="submit" value="Validuj">
         </form>
