@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+    <!-- Define the root element -->
+    <xs:element name="car">
+        <xs:complexType>
+            <xs:sequence>
+                <!-- Define elements for car information -->
+                <xs:element name="yearOfManufacture" type="xs:int"/>
+                <xs:element name="brandName" type="xs:string"/>
+                <xs:element name="isCrashed" type="xs:boolean"/>
+
+                <!-- Add an element for packages -->
+                <xs:element name="packages">
+                    <xs:complexType>
+                        <xs:sequence>
+                            <!-- Define elements for package information -->
+                            <xs:element name="package">
+                                <xs:complexType>
+                                    <xs:sequence>
+                                        <xs:element name="packageName" type="xs:string"/>
+                                        <xs:element name="packageDescription" type="xs:string"/>
+                                    </xs:sequence>
+                                </xs:complexType>
+                            </xs:element>
+                        </xs:sequence>
+                    </xs:complexType>
+                </xs:element>
+
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+</xs:schema>
