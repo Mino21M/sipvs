@@ -6,55 +6,63 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.*;
 
+
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+import java.sql.Array;
+import java.util.*;
 
 @WebServlet(name = "uloz", value = "/uloz")
 public class Uloz extends HttpServlet{
-    public void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        // Collect form data from the request
-        String yearOfManufacture = request.getParameter("yearOfManufacture");
-        String brandName = request.getParameter("brandName");
-        String isCrashed = request.getParameter("isCrashed");
 
-        // Extract packages
-        List<String[]> selectedPackages = new ArrayList<>();
-        Map<String, String[]> parameterMap = request.getParameterMap();
-        for (Map.Entry<String, String[]> entry : parameterMap.entrySet()) {
-            String key = entry.getKey();
-            if (key.startsWith("packages[")) {
-                int index = Integer.parseInt(key.substring(9, key.indexOf(']', 9)));
-                if (selectedPackages.size() <= index) {
-                    selectedPackages.add(new String[2]); // Each package is a String array with 2 elements: name and description
-                }
-                if (key.endsWith("[name]")) {
-                    selectedPackages.get(index)[0] = entry.getValue()[0];
-                } else if (key.endsWith("[description]")) {
-                    selectedPackages.get(index)[1] = entry.getValue()[0];
-                }
-            }
+    static class Car {
+        @JsonProperty("yearOfManufacture")
+        int yearOfManufacture = 2000;
+        @JsonProperty("brandName")
+        String brandName = "";
+        @JsonProperty("isCrashed")
+        Boolean isCrashed = false;
+        @JsonProperty("packages")
+        ArrayList<Packages> packages = new ArrayList<>();
+
+        static class Packages {
+            @JsonProperty("name")
+            String name = "";
+            @JsonProperty("description")
+            String description = "";
+        }
+    }
+    public void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        StringBuilder sb = new StringBuilder();
+        BufferedReader reader = request.getReader();
+        String line;
+        while ((line = reader.readLine()) != null) {
+            sb.append(line);
         }
 
-        // Create an XML document based on the XSD schema
-        String xmlData = "<car>" +
-                "<yearOfManufacture>" + yearOfManufacture + "</yearOfManufacture>" +
-                "<brandName>" + brandName + "</brandName>" +
-                "<isCrashed>" + (isCrashed != null ? "true" : "false") + "</isCrashed>";
+        // Convert JSON to Java Object using Jackson
+        ObjectMapper objectMapper = new ObjectMapper();
+        Car car = objectMapper.readValue(sb.toString(), Car.class);
 
-        if (!selectedPackages.isEmpty()) {
+        String xmlData = "<cars><car>" +
+                "<yearOfManufacture>" + car.yearOfManufacture + "</yearOfManufacture>" +
+                "<brandName>" + car.brandName + "</brandName>" +
+                "<isCrashed>" + (car.isCrashed != null ? "true" : "false") + "</isCrashed>";
+
+        if (!car.packages.isEmpty()) {
             xmlData += "<packages>";
-            for (String[] packageValue : selectedPackages) {
+            for (Car.Packages packages: car.packages) {
                 xmlData += "<package>" +
-                        "<packageName>" + packageValue[0] + "</packageName>" +
-                        "<packageDescription>" + packageValue[1] + "</packageDescription>" +
+                        "<packageName>" + packages.name + "</packageName>" +
+                        "<packageDescription>" + packages.description + "</packageDescription>" +
                         "</package>";
             }
             xmlData += "</packages>";
         }
 
-        xmlData += "</car>";
+        xmlData += "</car></cars>";
 
         response.setContentType("application/xml");
         PrintWriter out = response.getWriter();

@@ -96,30 +96,30 @@
             document.getElementById('uloz-form').addEventListener('submit', function(event) {
                 event.preventDefault();
 
-                var container = document.getElementById('packages-container');
-                var names = container.getElementsByClassName('packageName');
-                var descriptions = container.getElementsByClassName('packageDescription');
-                var form = document.getElementById('car-form');
+                let form = document.getElementById('uloz-form');
+                let formData = new FormData(form);
 
-                for (var i = 0; i < names.length; i++) {
-                    var nameInput = document.createElement('input');
-                    nameInput.type = 'hidden';
-                    nameInput.name = 'packages[' + i + '][name]';
-                    nameInput.value = names[i].value;
-                    form.appendChild(nameInput);
-
-                    var descriptionInput = document.createElement('input');
-                    descriptionInput.type = 'hidden';
-                    descriptionInput.name = 'packages[' + i + '][description]';
-                    descriptionInput.value = descriptions[i].value;
-                    form.appendChild(descriptionInput);
+                let json = {
+                    yearOfManufacture: Number(formData.get('yearOfManufacture')),
+                    brandName: formData.get('brandName'),
+                    isCrashed: !!formData.get('isCrashed'),
+                    packages: []
                 }
 
-                var formData = new FormData(event.target);
+                let names = formData.getAll('packageNames');
+                let descriptions = formData.getAll('packageDescriptions');
+
+                for(let i = 0; i < names.length; i++) {
+                    json.packages.push({ name: names[i], description: descriptions[i] });
+                }
+                console.log(json);
 
                 fetch(form.action, {
                     method: 'POST',
-                    body: formData
+                    body: JSON.stringify(json),
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
                 })
                     .then(response => {
                         if(response.ok) {
@@ -136,7 +136,7 @@
                         var link = document.createElement('a');
 
                         // Set the download attribute with a value (the name of the desired file)
-                        link.download = 'response.xml';
+                        link.download = 'car.xml';
 
                         // Create a URL to the Blob and set it as the href attribute
                         link.href = window.URL.createObjectURL(blob);
@@ -203,7 +203,7 @@
 </header>
 <div class="container">
     <!-- Form for saving cars -->
-    <form id="uloz-form" action="/uloz" method="post">
+    <form id="uloz-form" action="/uloz" method="post" content="multipart">
         <label for="year">Year of Manufacture:</label>
         <input type="number" id="year" name="yearOfManufacture" required><br>
 
