@@ -23,7 +23,7 @@ public class Validuj extends HttpServlet {
 
     public void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
         Part xmlData = request.getPart("uploadedFile");
-        boolean status = Extended.validuj(new StreamSource(xmlData.getInputStream()));
+        String status = Extended.validuj(new StreamSource(xmlData.getInputStream()));
         PrintWriter out = response.getWriter();
         out.println(status);
     }

@@ -7,12 +7,13 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.Part;
+import org.apache.commons.text.StringEscapeUtils;
 
 import javax.xml.transform.*;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 import java.io.*;
-import java.util.List;
+import java.util.Objects;
 
 
 @MultipartConfig(location = "/tmp", maxFileSize = 1024*1024, maxRequestSize = 2*1024*1024, fileSizeThreshold = 1024*1024)
@@ -70,8 +71,8 @@ public class Transformuj extends HttpServlet {
         String transformedHtml = "";
         Part xmlData = request.getPart("uploadedFile");
         StreamSourceContainer streamSourceContainer = duplicate(xmlData.getInputStream());
-        boolean status = Extended.validuj(streamSourceContainer.getStreamSource1());
-        if(status) {
+        String status = Extended.validuj(streamSourceContainer.getStreamSource1());
+        if(Objects.equals(status, "1")) {
             // Create a TransformerFactory
             TransformerFactory transformerFactory = TransformerFactory.newInstance();
 
@@ -100,7 +101,7 @@ public class Transformuj extends HttpServlet {
             // Get the transformed HTML as a string
             transformedHtml = outputWriter.toString();
         } else {
-            transformedHtml = "Invalid XML";
+            transformedHtml = status;
         }
 
         PrintWriter out = response.getWriter();
