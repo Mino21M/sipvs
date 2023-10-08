@@ -10,13 +10,16 @@ import java.io.StringReader;
 public class Extended {
     public static String xsd = """
             <?xml version="1.0" encoding="UTF-8"?>
-            <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+            <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+                  targetNamespace="http://sipvs.uzasnyteam.fiit.stuba.sk/"
+                  xmlns:tns="http://sipvs.uzasnyteam.fiit.stuba.sk/"
+                  elementFormDefault="qualified">
 
                 <!-- Define a new root element that can contain multiple car elements -->
                 <xs:element name="cars">
                     <xs:complexType>
                         <xs:sequence>
-                            <xs:element maxOccurs="unbounded" ref="car"/>
+                            <xs:element maxOccurs="unbounded" ref="tns:car"/>
                         </xs:sequence>
                     </xs:complexType>
                 </xs:element>
@@ -50,13 +53,15 @@ public class Extended {
 
     public static String xslt = """
             <?xml version="1.0" encoding="UTF-8"?>
-             <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">
+             <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" 
+                version="1.0" 
+                xmlns:tns="http://sipvs.uzasnyteam.fiit.stuba.sk/">
              
                  <!-- Template to match the root and apply templates to each car element -->
                  <xsl:template match="/">
                      <html>
                          <head>
-                             <title>Cars Information</title>
+                             <title>Cars Information2</title>
                              <style>
                                  body {
                                      font-family: 'Arial', sans-serif;
@@ -155,25 +160,25 @@ public class Extended {
                              <header>
                                  <h1>Car Information Form</h1>
                              </header>
-                             <xsl:apply-templates select="//car"/>
+                             <xsl:apply-templates select="//tns:car"/>
                          </body>
                      </html>
                  </xsl:template>
              
                  <!-- Template to match each car element and display its information -->
-                 <xsl:template match="car">
+                 <xsl:template match="tns:car">
                     <div id="uloz">
                         <label for="year">Year of Manufacture:</label>
                         <input type="number" id="year" name="yearOfManufacture" read-only="true" disabled="true">
                           <xsl:attribute name="value">
-                            <xsl:value-of select="yearOfManufacture"/>
+                            <xsl:value-of select="tns:yearOfManufacture"/>
                           </xsl:attribute>
                         </input>
                 
                         <label for="brand">Brand Name:</label>
                         <input type="text" id="brand" name="brandName" read-only="true" disabled="true">
                           <xsl:attribute name="value">
-                            <xsl:value-of select="brandName"/>
+                            <xsl:value-of select="tns:brandName"/>
                           </xsl:attribute>
                         </input>
                 
@@ -186,22 +191,22 @@ public class Extended {
                         </input>
                 
                         <div id="packages-container" class="package-row">
-                            <xsl:apply-templates select="packages/package"/>
+                            <xsl:apply-templates select="tns:packages/tns:package"/>
                         </div>
                     </div>
                  </xsl:template>
              
-                 <xsl:template match="package">
+                 <xsl:template match="tns:package">
                     <label for="packageName">Package Name:</label>
                     <input type="text" id="packageName" name="packageNames" read-only="true" disabled="true">
                       <xsl:attribute name="value">
-                        <xsl:value-of select="packageName"/>
+                        <xsl:value-of select="tns:packageName"/>
                       </xsl:attribute>
                     </input>
                     <label for="packageDescription">Package Description:</label>
                     <input type="text" id="packageDescriptions" name="packageDescriptions" read-only="true" disabled="true">
                       <xsl:attribute name="value">
-                        <xsl:value-of select="packageDescription"/>
+                        <xsl:value-of select="tns:packageDescription"/>
                       </xsl:attribute>
                     </input>
                  </xsl:template>
