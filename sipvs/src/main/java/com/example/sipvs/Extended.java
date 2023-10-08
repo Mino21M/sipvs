@@ -1,13 +1,36 @@
 package com.example.sipvs;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import javax.xml.XMLConstants;
 import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 import javax.xml.validation.Validator;
 import java.io.StringReader;
+import java.util.ArrayList;
+
+
+class Car {
+    @JsonProperty("yearOfManufacture")
+    int yearOfManufacture = 2000;
+    @JsonProperty("brandName")
+    String brandName = "";
+    @JsonProperty("isCrashed")
+    Boolean isCrashed = false;
+    @JsonProperty("packages")
+    ArrayList<Packages> packages = new ArrayList<>();
+
+    static class Packages {
+        @JsonProperty("name")
+        String name = "";
+        @JsonProperty("description")
+        String description = "";
+    }
+}
 
 public class Extended {
+
     public static String xsd = """
             <?xml version="1.0" encoding="UTF-8"?>
             <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"

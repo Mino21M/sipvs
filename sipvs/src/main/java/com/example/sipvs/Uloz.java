@@ -5,16 +5,9 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.*;
-import org.apache.commons.text.StringEscapeUtils;
-
-
-import java.io.File;
-
-import javax.xml.namespace.QName;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerConfigurationException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
@@ -22,39 +15,15 @@ import javax.xml.transform.stream.StreamResult;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
-import jlibs.xml.sax.XMLDocument;
-//import jlibs.xml.X
-//import jlibs.xml.
-
 
 import java.io.IOException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import java.sql.Array;
 import java.util.*;
 
 @WebServlet(name = "uloz", value = "/uloz")
 public class Uloz extends HttpServlet{
-
-    static class Car {
-        @JsonProperty("yearOfManufacture")
-        int yearOfManufacture = 2000;
-        @JsonProperty("brandName")
-        String brandName = "";
-        @JsonProperty("isCrashed")
-        Boolean isCrashed = false;
-        @JsonProperty("packages")
-        ArrayList<Packages> packages = new ArrayList<>();
-
-        static class Packages {
-            @JsonProperty("name")
-            String name = "";
-            @JsonProperty("description")
-            String description = "";
-        }
-    }
-
     public void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
         StringBuilder sb = new StringBuilder();
         BufferedReader reader = request.getReader();
