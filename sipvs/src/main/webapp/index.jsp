@@ -2,6 +2,9 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <script type="text/javascript" src="/config.js"></script>
+    <script type="text/javascript" src="/dCommon.min.js"></script>
+    <script type="text/javascript" src="/dSigXades.min.js"></script>
     <title>Car Information Form</title>
     <style>
         body {
@@ -99,6 +102,7 @@
                 let form = document.getElementById('uloz-form');
                 let formData = new FormData(form);
 
+
                 let json = {
                     yearOfManufacture: Number(formData.get('yearOfManufacture')),
                     brandName: formData.get('brandName'),
@@ -181,6 +185,276 @@
                         alert('Failure: Could not validate. Please try again.');
                     });
             });
+
+            function displayResult(xml, xsl)
+            {
+                let parseXml;
+
+                if (window.DOMParser) {
+                    parseXml = function(xmlStr) {
+                        return ( new window.DOMParser() ).parseFromString(xmlStr, "text/xml");
+                    };
+                } else if (typeof window.ActiveXObject != "undefined" && new window.ActiveXObject("Microsoft.XMLDOM")) {
+                    parseXml = function(xmlStr) {
+                        var xmlDoc = new window.ActiveXObject("Microsoft.XMLDOM");
+                        xmlDoc.async = "false";
+                        xmlDoc.loadXML(xmlStr);
+                        return xmlDoc;
+                    };
+                } else {
+                    parseXml = function() { return null; }
+                }
+
+                xml = parseXml(xml);
+                xsl = parseXml(xsl);
+// code for IE
+                if (window.ActiveXObject)
+                {
+                    ex = xml.transformNode(xsl);
+                    return ex;
+                }
+// code for Chrome, Firefox, Opera, etc.
+                else if (document.implementation && document.implementation.createDocument)
+                {
+                    xsltProcessor = new XSLTProcessor();
+                    xsltProcessor.importStylesheet(xsl);
+                    resultDocument = xsltProcessor.transformToFragment(xml, document);
+                    return resultDocument;
+                }
+            }
+
+            document.getElementById('podpisuj-form').addEventListener('submit', function(event) {
+                event.preventDefault();
+
+                let reader = new FileReader();
+                reader.onload = function(e)
+                {
+                    let xsd = `<?xml version="1.0" encoding="UTF-8"?>
+            <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+                  targetNamespace="http://sipvs.uzasnyteam.fiit.stuba.sk/"
+                  xmlns:tns="http://sipvs.uzasnyteam.fiit.stuba.sk/"
+                  elementFormDefault="qualified">
+
+                <!-- Define a new root element that can contain multiple car elements -->
+                <xs:element name="cars">
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element maxOccurs="unbounded" ref="tns:car"/>
+                        </xs:sequence>
+                    </xs:complexType>
+                </xs:element>
+
+                <!-- Define the car element -->
+                <xs:element name="car">
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element name="yearOfManufacture" type="xs:int"/>
+                            <xs:element name="brandName" type="xs:string"/>
+                            <xs:element name="packages">
+                                <xs:complexType>
+                                    <xs:sequence>
+                                        <xs:element maxOccurs="unbounded" name="package">
+                                            <xs:complexType>
+                                                <xs:sequence>
+                                                    <xs:element name="packageName" type="xs:string"/>
+                                                    <xs:element name="packageDescription" type="xs:string"/>
+                                                </xs:sequence>
+                                            </xs:complexType>
+                                        </xs:element>
+                                    </xs:sequence>
+                                </xs:complexType>
+                            </xs:element>
+                        </xs:sequence>
+                      <xs:attribute name="isCrashed"  type="xs:boolean"/>
+                    </xs:complexType>
+                </xs:element>
+
+            </xs:schema>`;
+                    let xslt = `<?xml version="1.0" encoding="UTF-8"?>
+             <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+                version="1.0"
+                xmlns:tns="http://sipvs.uzasnyteam.fiit.stuba.sk/">
+
+                 <!-- Template to match the root and apply templates to each car element -->
+                 <xsl:template match="/">
+                     <html>
+                         <head>
+                             <title>Cars Information</title>
+                             <style>
+                                 body {
+                                     font-family: 'Arial', sans-serif;
+                                     background-color: #f4f4f4;
+                                     margin: 0;
+                                     padding: 0;
+                                     width: 100%;
+                                 }
+
+                                 header {
+                                     background: #50b3a2;
+                                     color: white;
+                                     text-align: center;
+                                     padding: 1em 0;
+                                 }
+
+                                 container {
+                                     width: 50%;
+                                     margin: auto;
+                                 }
+
+                                 #uloz {
+                                     padding: 2em;
+                                     background: #fff;
+                                     margin: 2em 0;
+                                     border-radius: 8px;
+                                     box-shadow: 0 0 10px #ccc;
+                                 }
+
+                                 label, input {
+                                     display: block;
+                                     margin-bottom: 1em;
+                                 }
+
+                                 input[type="text"],
+                                 input[type="number"],
+                                 input[type="file"] {
+                                     width: calc(100% - 22px);
+                                     padding: 10px;
+                                     border: solid 1px #ddd;
+                                     border-radius: 5px;
+                                 }
+
+                                 a {
+                                     width: 100%;
+                                     padding: 10px;
+                                     border: none;
+                                     color: #fff;
+                                     background: #28a745;
+                                     cursor: pointer;
+                                     border-radius: 5px;
+                                     display: block;
+                                     margin-bottom: 1em;
+                                     text-decoration: none;
+                                     text-align: center;
+                                 }
+
+                                 a:hover {
+                                     background: #218838;
+                                 }
+                                 /* [other styles] */
+
+                                 .package-row {
+                                     margin-bottom: 10px;
+                                 }
+
+                                 .package-row label, .package-row input {
+                                     display: inline-block;
+                                 }
+
+                                 .package-row label {
+                                     width: 20%;
+                                 }
+
+                                 .package-row input {
+                                     width: 25%;
+                                 }
+
+                                 #add-package {
+                                     cursor: pointer;
+                                     background-color: #007bff;
+                                     color: white;
+                                     padding: 5px 10px;
+                                     border: none;
+                                     border-radius: 5px;
+                                     margin-bottom: 5px;
+                                     width: 100%;
+                                 }
+
+                                 #add-package:hover {
+                                     background-color: #0056b3;
+                                 }
+                             </style>
+                         </head>
+                         <body>
+                             <header>
+                                 <h1>Car Information Form</h1>
+                             </header>
+                             <xsl:apply-templates select="//tns:car"/>
+                         </body>
+                     </html>
+                 </xsl:template>
+
+                 <!-- Template to match each car element and display its information -->
+                 <xsl:template match="tns:car">
+                    <div id="uloz">
+                        <label for="year">Year of Manufacture:</label>
+                        <input type="number" id="year" name="yearOfManufacture" read-only="true" disabled="true">
+                          <xsl:attribute name="value">
+                            <xsl:value-of select="tns:yearOfManufacture"/>
+                          </xsl:attribute>
+                        </input>
+
+                        <label for="brand">Brand Name:</label>
+                        <input type="text" id="brand" name="brandName" read-only="true" disabled="true">
+                          <xsl:attribute name="value">
+                            <xsl:value-of select="tns:brandName"/>
+                          </xsl:attribute>
+                        </input>
+
+                        <label for="crash">Car Crashed:</label>
+                        <input type="checkbox" id="crash" name="isCrashed" read-only="true" disabled="true">
+                            <xsl:if test="contains(./@isCrashed,'true')">
+                                <xsl:attribute name="checked">
+                                </xsl:attribute>
+                            </xsl:if>
+                        </input>
+
+                        <div id="packages-container" class="package-row">
+                            <xsl:apply-templates select="tns:packages/tns:package"/>
+                        </div>
+                    </div>
+                 </xsl:template>
+
+                 <xsl:template match="tns:package">
+                    <label for="packageName">Package Name:</label>
+                    <input type="text" id="packageName" name="packageNames" read-only="true" disabled="true">
+                      <xsl:attribute name="value">
+                        <xsl:value-of select="tns:packageName"/>
+                      </xsl:attribute>
+                    </input>
+                    <label for="packageDescription">Package Description:</label>
+                    <input type="text" id="packageDescriptions" name="packageDescriptions" read-only="true" disabled="true">
+                      <xsl:attribute name="value">
+                        <xsl:value-of select="tns:packageDescription"/>
+                      </xsl:attribute>
+                    </input>
+                 </xsl:template>
+             </xsl:stylesheet>`;
+                    let namespace = "http://sipvs.uzasnyteam.fiit.stuba.sk/";
+                    let xs_ref = "http://www.w3.org/2001/XMLSchema";
+                    let xslt_ref = "http://www.w3.org/1999/XSL/Transform";
+                    ditec.dSigXadesJs.deploy(null, new Callback(function(){
+
+                        ditec.dSigXadesJs.initialize(new Callback(function(){
+
+                            ditec.dSigXadesJs.addXmlObject2("xml1", "Formular", e.target.result, xsd, namespace, xs_ref, displayResult(e.target.result, xslt), xslt_ref, "HTML", new Callback(function(){
+                                //ditec.dSigXadesJs.addPdfObject("pdf1", "FormularVisual", )
+                                    ditec.dSigXadesJs.sign20("signatureId", "http://www.w3.org/2001/04/xmlenc#sha256", "urn:oid:1.3.158.36061701.1.2.3", "dataEnvelopeId", "http://dataenvelopeuri/", "dataEnvelopeDescr", new Callback(function(){
+
+                                        ditec.dSigXadesJs.getSignedXmlWithEnvelope(new Callback(function(ret) {
+                                            let textToSave = ret;
+                                            let hiddenElement = document.createElement('a');
+
+                                            hiddenElement.href = 'data:text/xml,' + encodeURI(textToSave);
+                                            hiddenElement.target = '_blank';
+                                            hiddenElement.download = 'car_podpisane.xml';
+                                            hiddenElement.click();
+                                        }));
+                                    }));
+                            }));
+                        }));
+                    }));
+                };
+                reader.readAsText(document.getElementById("podpisuj").files[0]);
         });
 
         function addPackageRow() {
@@ -194,6 +468,13 @@
                 '<input type="text" id="packageDescription" name="packageDescriptions" required>';
 
             container.appendChild(newRow);
+        }})
+
+        function Callback(onSuccess) {
+            this.onSuccess = onSuccess;
+            this.onError = function(e) {
+                alert("Chyba: " + e);
+            }
         }
     </script>
 </head>
@@ -233,11 +514,19 @@
     </form>
 
     <!-- Form for displaying -->
-    <form action="/transformuj" method="post" enctype="multipart/form-data">
+    <form action="/transformuj" method="post" enctype="multipart/form-data" >
         <label for="file">Upload a File:</label>
         <input type="file" id="file" name="uploadedFile"><br>
 
         <input type="submit" value="Transformuj">
+    </form>
+
+    <!-- Form for signature -->
+    <form id="podpisuj-form">
+        <label for="file">Upload a File:</label>
+        <input type="file" id="podpisuj" name="uploadedFile"><br>
+
+        <input type="submit" value="Podpisuj">
     </form>
 </div>
 </body>

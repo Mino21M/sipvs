@@ -1,0 +1,56 @@
+1. zakladne pojmy - 20%
+	- uvod do xml, xsd, xsl
+	- navrh konkretneho formulara (xsd, xsl)
+	- vystupom je xml, xsd, xsl do html
+	- implementacia jednoduchej web aplikacie pre tipovanie poloziek formulara, overenie voci scheme a jej zobrazenie pomocou xsl v html
+	- vystupom je funkcna web aplikacia
+
+
+2. vytvorenie elektronickeho podpisu - 20%
+	- uvod do xml signature a XAdES + formy xadesu (minimalne EPES a T - s tymi sa bude pracovat)
+	- uvod do certifikatov x509
+	- rozsirenie aplikacie o integraciu podpisovaca DSigner XAdES
+	- vystupom funkcna aplikacia integrujuca podpisovac a podpisane xml (XAdES-EPES) ulozene v subore
+
+
+3. casova peciatka - 20%
+	- uvod do casovej peciatky
+	- implementacia aplikacie ziadajucej casovu peciatku a rozsirenie XAdES-EPES na XAdES-T
+	- vystupom je rozsireny podpis o casovu peciatku - XAdES-T ulozeny v subore
+
+
+4. overenie elektronickeho podpisu - 40%
+	- uvod do problematiky overovania
+	- uvod co crl a vztahu s certifikatmi
+	- implementacia jednoducheho overovaca, ktory overi XAdES-T. implementacia bude pozostavat z vybranych kontrol (nie cela cert. cesta, ale iba podpisovy certifikat voci crl, atd...)
+	- vystupom je aplikacia s informaciou o platnosti podpisu XAdES-T -> mozne testovat aj navzajom v ramci skupin
+
+
+zaciatok 18.9.2023
+koniec 15.12.2023
+
+19.9.	1.cvicenie
+
+26.9.	1.cvicenie
+
+3.10.	2.cvicenie
+
+10.10.	2.cvicenie
+
+17.10. 	3.cvicenie
+
+24.10. 	3.cvicenie
+
+31.10. 	4.cvicenie 
+
+7.11. 	4.cvicenie
+
+14.11. 	5.cvicenie
+
+21.11. 	5.cvicenie
+
+28.11. 	6.cvicenie
+
+5.12. 	6.cvicenie
+
+12.12.	7.cvicenie ***** Výučba ako v piatok - náhrada

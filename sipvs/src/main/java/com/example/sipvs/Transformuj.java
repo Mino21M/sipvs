@@ -7,7 +7,6 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.Part;
-import org.apache.commons.text.StringEscapeUtils;
 
 import javax.xml.transform.*;
 import javax.xml.transform.stream.StreamResult;
@@ -20,7 +19,7 @@ import java.util.Objects;
 @WebServlet(name="transformuj", value="/transformuj")
 public class Transformuj extends HttpServlet {
 
-    public class StreamSourceContainer {
+    public static class StreamSourceContainer {
         private final StreamSource streamSource1;
         private final StreamSource streamSource2;
 
