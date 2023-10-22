@@ -176,38 +176,40 @@
                         alert('Failure: Could not validate. Please try again.');
                     });
             });
-        function createRequest (e, xslt, xsd, pdf) {
-            let xml = e.target.result;
-            let namespace = "http://sipvs.uzasnyteam.fiit.stuba.sk/";
-            let xs_ref = "http://www.w3.org/2001/XMLSchema";
-            let xslt_ref = "http://www.w3.org/1999/XSL/Transform";
-            ditec.dSigXadesJs.deploy(null, new Callback(function(){
+            function createRequest (e, xslt, xsd, pdf) {
+                let xml = e.target.result;
+                let namespace = "http://sipvs.uzasnyteam.fiit.stuba.sk/";
+                let xs_ref = "http://www.w3.org/2001/XMLSchema";
+                let xslt_ref = "http://www.w3.org/1999/XSL/Transform";
+                ditec.dSigXadesJs.deploy(null, new Callback(function(){
 
-                ditec.dSigXadesJs.initialize(new Callback(function(){
+                    ditec.dSigXadesJs.initialize(new Callback(function(){
 
-                    ditec.dSigXadesJs.addXmlObject2("xml1", "Formular", xml, xsd, namespace, xs_ref, xslt, xslt_ref, "HTML", new Callback(function(){
+                        ditec.dSigXadesJs.addXmlObject2("xml1", "Formular", xml, xsd, namespace, xs_ref, xslt, xslt_ref, "HTML", new Callback(function(){
 
-                        ditec.dSigXadesJs.addPdfObject("pdf1", "FormularVisual", pdf, "", "http://aljksdlkasjdkl", 2, true, new Callback(function () {
+                            ditec.dSigXadesJs.addPdfObject("pdf1", "FormularVisual", pdf, "", "http://aljksdlkasjdkl", 2, true, new Callback(function () {
 
-                            ditec.dSigXadesJs.sign20("signatureId", "http://www.w3.org/2001/04/xmlenc#sha256", "urn:oid:1.3.158.36061701.1.2.3", "dataEnvelopeId", "http://dataenvelopeuri/", "dataEnvelopeDescr", new Callback(function(){
+                                ditec.dSigXadesJs.sign20("signatureId", "http://www.w3.org/2001/04/xmlenc#sha256", "urn:oid:1.3.158.36061701.1.2.3", "dataEnvelopeId", "http://dataenvelopeuri/", "dataEnvelopeDescr", new Callback(function(){
 
-                                ditec.dSigXadesJs.getSignedXmlWithEnvelope(new Callback(function(ret) {
-                                    let textToSave = ret;
-                                    let hiddenElement = document.createElement('a');
-
-                                    hiddenElement.href = 'data:text/xml,' + encodeURI(textToSave);
-                                    hiddenElement.target = '_blank';
-                                    hiddenElement.download = 'car_podpisane.xml';
-                                    hiddenElement.click();
+                                    ditec.dSigXadesJs.getSignedXmlWithEnvelope(new Callback(function(ret) {
+                                        let textToSave = ret;
+                                        let hiddenElement = document.createElement('a');
+                                        let binaryData = [];
+                                        
+                                        binaryData.push(textToSave);
+                                        hiddenElement.href = window.URL.createObjectURL(new Blob(binaryData, {type: "data:text/xml"}))
+                                        hiddenElement.target = '_blank';
+                                        hiddenElement.download = 'car_podpisane.xml';
+                                        hiddenElement.click();
+                                    }));
                                 }));
                             }));
                         }));
                     }));
                 }));
-            }));
-        }
+            }
 
-        document.getElementById('podpisuj-form').addEventListener('submit', async function(event) {
+            document.getElementById('podpisuj-form').addEventListener('submit', async function(event) {
                 event.preventDefault();
                 let input = document.getElementById("podpisuj");
 
@@ -226,20 +228,20 @@
                 let reader = new FileReader();
                 reader.onload = (e) => createRequest(e, xslt, xsd, pdf);
                 reader.readAsText(input.files[0]);
-        });
+            });
 
-        function addPackageRow() {
-            var container = document.getElementById('packages-container');
-            var newRow = document.createElement('div');
-            newRow.className = 'package-row';
+            function addPackageRow() {
+                var container = document.getElementById('packages-container');
+                var newRow = document.createElement('div');
+                newRow.className = 'package-row';
 
-            newRow.innerHTML = '<label for="packageName">Package Name:</label>' +
-                '<input type="text" id="packageName" name="packageNames" required>' +
-                '<label for="packageDescription">Package Description:</label>' +
-                '<input type="text" id="packageDescription" name="packageDescriptions" required>';
+                newRow.innerHTML = '<label for="packageName">Package Name:</label>' +
+                    '<input type="text" id="packageName" name="packageNames" required>' +
+                    '<label for="packageDescription">Package Description:</label>' +
+                    '<input type="text" id="packageDescription" name="packageDescriptions" required>';
 
-            container.appendChild(newRow);
-        }})
+                container.appendChild(newRow);
+            }})
 
         function Callback(onSuccess) {
             this.onSuccess = onSuccess;
