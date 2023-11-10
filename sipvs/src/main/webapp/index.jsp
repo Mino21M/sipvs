@@ -176,6 +176,7 @@
                         alert('Failure: Could not validate. Please try again.');
                     });
             });
+
             function createRequest (e, xslt, xsd, pdf) {
                 let xml = e.target.result;
                 let namespace = "http://sipvs.uzasnyteam.fiit.stuba.sk/";
@@ -228,6 +229,20 @@
                 let reader = new FileReader();
                 reader.onload = (e) => createRequest(e, xslt, xsd, pdf);
                 reader.readAsText(input.files[0]);
+            });
+
+
+            document.getElementById('timestamp-form').addEventListener('submit', async function(event) {
+                event.preventDefault();
+                let input = document.getElementById("timestamp");
+
+                let data = new FormData();
+                data.append('uploadedFile', input.files[0]);
+
+
+                let timestamp_request = await fetch('/timestamp', {method: 'POST', body: data})
+                let timestamp = await timestamp_request.text();
+
             });
 
             function addPackageRow() {
@@ -300,6 +315,13 @@
         <input type="file" id="podpisuj" name="uploadedFile"><br>
 
         <input type="submit" value="Podpisuj">
+    </form>
+
+    <form id="timestamp-form">
+        <label for="file">Upload a File:</label>
+        <input type="file" id="timestamp" name="uploadedFile"><br>
+
+        <input type="submit" value="Timestamp">
     </form>
 </div>
 </body>
