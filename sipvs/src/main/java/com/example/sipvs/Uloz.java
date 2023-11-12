@@ -18,7 +18,6 @@ import org.w3c.dom.Element;
 
 import java.io.IOException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.*;
 

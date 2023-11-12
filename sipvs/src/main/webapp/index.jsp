@@ -243,26 +243,26 @@
                 let timestamp_request = await fetch('/timestamp', {method: 'POST', body: data})
                 let timestamp = await timestamp_request.text();
 
-            });
-
-            function addPackageRow() {
-                var container = document.getElementById('packages-container');
-                var newRow = document.createElement('div');
-                newRow.className = 'package-row';
-
-                newRow.innerHTML = '<label for="packageName">Package Name:</label>' +
-                    '<input type="text" id="packageName" name="packageNames" required>' +
-                    '<label for="packageDescription">Package Description:</label>' +
-                    '<input type="text" id="packageDescription" name="packageDescriptions" required>';
-
-                container.appendChild(newRow);
-            }})
+            });})
 
         function Callback(onSuccess) {
             this.onSuccess = onSuccess;
             this.onError = function(e) {
                 alert("Chyba: " + e);
             }
+        }
+
+        function addPackageRow() {
+            var container = document.getElementById('packages-container');
+            var newRow = document.createElement('div');
+            newRow.className = 'package-row';
+
+            newRow.innerHTML = '<label for="packageName">Package Name:</label>' +
+                '<input type="text" id="packageName" name="packageNames" required>' +
+                '<label for="packageDescription">Package Description:</label>' +
+                '<input type="text" id="packageDescription" name="packageDescriptions" required>';
+
+            container.appendChild(newRow);
         }
     </script>
 </head>
