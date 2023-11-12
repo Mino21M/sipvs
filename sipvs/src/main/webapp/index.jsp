@@ -27,14 +27,14 @@
             box-shadow: 0 0 10px lightgray;
         }
 
-        label, input {
+        label, input, select {
             display: block;
             margin-bottom: 1em;
         }
 
         input[type="text"],
         input[type="number"],
-        input[type="file"] {
+        input[type="file"], select {
             width: 100%;
             padding: 10px;
             border: solid 1px lightgray;
@@ -235,14 +235,23 @@
             document.getElementById('timestamp-form').addEventListener('submit', async function(event) {
                 event.preventDefault();
                 let input = document.getElementById("timestamp");
+                let whichData = document.getElementById("whichData");
 
                 let data = new FormData();
+                data.append('whichData', whichData.value);
                 data.append('uploadedFile', input.files[0]);
 
-
                 let timestamp_request = await fetch('/timestamp', {method: 'POST', body: data})
-                let timestamp = await timestamp_request.text();
 
+                let textToSave = await timestamp_request.text();
+                let hiddenElement = document.createElement('a');
+                let binaryData = [];
+
+                binaryData.push(textToSave);
+                hiddenElement.href = window.URL.createObjectURL(new Blob(binaryData, {type: "data:text/xml"}))
+                hiddenElement.target = '_blank';
+                hiddenElement.download = 'car_timestamp.xml';
+                hiddenElement.click();
             });})
 
         function Callback(onSuccess) {
@@ -320,6 +329,12 @@
     <form id="timestamp-form">
         <label for="file">Upload a File:</label>
         <input type="file" id="timestamp" name="uploadedFile"><br>
+        <label for="whichData">Ktore data: </label>
+        <select id="whichData" name="whichData">
+            <option value="1">Iba signature extrahovany z XML a zahashovany</option>
+            <option value="2">Iba signature extrahovany z XML</option>
+            <option value="3">Cely subor zahashovany</option>
+        </select>
 
         <input type="submit" value="Timestamp">
     </form>
