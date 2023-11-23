@@ -51,7 +51,6 @@ public class Timestamp extends HttpServlet {
             int outOff = 0;
             digest.doFinal(signatureDigest, outOff);
         } else if (whichData == 2) {
-            // extrahovanie len dat ktore treba opeciatkovat
             signatureDigest = xmlString.substring(xmlString.indexOf(this.initMatch) + this.initOffset, xmlString.indexOf(this.lastMatch)).getBytes();
         } else {
             Digest digest = new SHA256Digest();

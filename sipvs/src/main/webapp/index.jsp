@@ -252,7 +252,22 @@
                 hiddenElement.target = '_blank';
                 hiddenElement.download = 'car_timestamp.xml';
                 hiddenElement.click();
-            });})
+            });
+
+            document.getElementById('overuj-form').addEventListener('submit', async function(event) {
+                event.preventDefault();
+                let input = document.getElementById("check");
+
+                let data = new FormData();
+                data.append('uploadedFile', input.files[0]);
+
+                let timestamp_request = await fetch('/check', {method: 'POST', body: data})
+
+                let textToSave = await timestamp_request.text();
+                alert(textToSave);
+            });
+
+        })
 
         function Callback(onSuccess) {
             this.onSuccess = onSuccess;
@@ -303,19 +318,19 @@
     </form>
 
     <!-- Form for validation -->
-    <form  id="validuj-form" action="/validuj" method="post" enctype="multipart/form-data">
-        <label for="validuj">Upload a File:</label>
-        <input type="file" id="validuj" name="uploadedFile"><br>
-
-        <input type="submit" value="Validuj">
-    </form>
-
-    <!-- Form for displaying -->
     <form action="/transformuj" method="post" enctype="multipart/form-data" >
         <label for="file">Upload a File:</label>
         <input type="file" id="file" name="uploadedFile"><br>
 
         <input type="submit" value="Transformuj">
+    </form>
+
+    <!-- Form for displaying -->
+    <form  id="validuj-form" action="/validuj" method="post" enctype="multipart/form-data">
+        <label for="validuj">Upload a File:</label>
+        <input type="file" id="validuj" name="uploadedFile"><br>
+
+        <input type="submit" value="Validuj">
     </form>
 
     <!-- Form for signature -->
@@ -332,11 +347,16 @@
         <label for="whichData">Ktore data: </label>
         <select id="whichData" name="whichData">
             <option value="1">Iba signature extrahovany z XML a zahashovany</option>
-            <option value="2">Iba signature extrahovany z XML</option>
             <option value="3">Cely subor zahashovany</option>
         </select>
 
         <input type="submit" value="Timestamp">
+    </form>
+
+    <form id="overuj-form">
+        <label for="file">Upload a File:</label>
+        <input type="file" id="check" name="uploadedFile"><br>
+        <input type="submit" value="Overuj">
     </form>
 </div>
 </body>
