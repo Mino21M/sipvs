@@ -258,13 +258,20 @@
                 event.preventDefault();
                 let input = document.getElementById("check");
 
-                let data = new FormData();
-                data.append('uploadedFile', input.files[0]);
+                var files = input.files;
 
-                let timestamp_request = await fetch('/check', {method: 'POST', body: data})
+                // Iterate over the selected files
+                for (var i = 0; i < files.length; i++) {
+                    let data = new FormData();
+                    data.append('uploadedFile', input.files[i]);
 
-                let textToSave = await timestamp_request.text();
-                alert(textToSave);
+                    let timestamp_request = await fetch('/check', {method: 'POST', body: data})
+
+                    let textToSave = await timestamp_request.text();
+                    alert(textToSave);
+                }
+
+
             });
 
         })
@@ -353,11 +360,12 @@
         <input type="submit" value="Timestamp">
     </form>
 
-    <form id="overuj-form">
-        <label for="file">Upload a File:</label>
-        <input type="file" id="check" name="uploadedFile"><br>
+    <form id="overuj-form" enctype="multipart/form-data">
+        <label for="file">Upload Files:</label>
+        <input type="file" id="check" name="uploadedFiles" multiple><br>
         <input type="submit" value="Overuj">
     </form>
+
 </div>
 </body>
 </html>

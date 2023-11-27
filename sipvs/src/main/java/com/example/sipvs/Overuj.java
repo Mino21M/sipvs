@@ -1,7 +1,6 @@
 package com.example.sipvs;
 
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.annotation.WebServlet;
@@ -10,8 +9,8 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.Part;
-import org.bouncycastle.cms.CMSSignedData;
-import org.bouncycastle.jcajce.provider.asymmetric.X509;
+import org.bouncycastle.asn1.x509.CertificateList;
+import org.bouncycastle.jce.provider.X509CRLParser;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -19,16 +18,26 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
 import java.io.*;
-import java.nio.charset.StandardCharsets;
+import java.net.MalformedURLException;
+import java.rmi.ServerException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
+import java.security.cert.*;
+import java.util.*;
 import java.security.cert.X509Certificate;
-import java.util.ArrayList;
-import java.util.Hashtable;
-import java.util.List;
+
 import org.bouncycastle.tsp.*;
 import org.bouncycastle.cert.*;
-import org.bouncycastle.x509.*;
 import org.bouncycastle.cms.*;
-import org.bouncycastle.*;
+import org.bouncycastle.util.Store;
+
+import java.net.URL;
+
+import org.bouncycastle.cert.jcajce.JcaX509CRLConverter;
+import java.security.Provider;
+import java.security.Security;
+
 
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -39,7 +48,9 @@ import org.w3c.dom.NodeList;
 public class Overuj extends HttpServlet {
     public void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
         Part xmlData = request.getPart("uploadedFile");
+        String fileName = xmlData.getSubmittedFileName();
         PrintWriter out = response.getWriter();
+        out.println(fileName);
 
         try {
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
@@ -50,7 +61,8 @@ public class Overuj extends HttpServlet {
             // date envelope check
             boolean namespaceCheck = checkNamespace(rootElement);
             if (!namespaceCheck) {
-                out.println("overenie datovej obalky: nespravny namespace");
+                out.println("overenie datovej obalky: nespravny namespace\n");
+                return;
             }
 
             // SignatureMethod & CanonicalizationMethod check
@@ -70,7 +82,8 @@ public class Overuj extends HttpServlet {
             if (!allowedAlghoritms.contains(signatureMethod) ||
                     !canonicalizationMethod.equals("http://www.w3.org/TR/2001/REC-xml-c14n-20010315")) {
 
-                out.println("overenie xml signature: nespravny SignatureMethod alebo CanonicalizationMethod");
+                out.println("overenie xml signature: nespravny SignatureMethod alebo CanonicalizationMethod\n");
+                return;
             }
 
             // overenie casovej peciatky
@@ -78,17 +91,67 @@ public class Overuj extends HttpServlet {
 
             try {
                 byte[] timestampBytes = java.util.Base64.getDecoder().decode(timestamp);
-                TimeStampResponse timeStampResponse = new TimeStampResponse(timestampBytes);
-                //byte[] tsCert = getTimeStampSignatureCertificate(timestampBytes);
+                X509CertificateHolder tsCert = getTimeStampSignatureCertificate(timestampBytes);
 
-                out.println("ziskany tsCert!!!");
+                if (tsCert == null){
+                    out.println("Overenie casovej peciatky: casova peciatka nebola najdena\n");
+                    return;
+                }
+
+                if (!tsCert.isValidOn(new Date())){
+                    out.println("Overenie casovej peciatky: neplatny cas voci aktualnemu datumu.\n");
+                    return;
+                }
+
+                X509CRL crl = getCRL("http://test.ditec.sk/TSAServer/crl/dtctsa.crl");
+
+                if (crl.getRevokedCertificate(tsCert.getSerialNumber()) != null){
+                    out.println("Overenie casovej peciatky: neplatny certifikat podla CRL\n");
+                    return;
+                }
+
+                String messageImprintCheck = checkMessageImprint(timestampBytes, rootElement);
+                if (!messageImprintCheck.equals("uspech")) {
+                    out.println(messageImprintCheck);
+                    out.println();
+                    return;
+                }
 
 
             } catch (Exception e) {
                 out.println(e);
             }
 
-            out.println("overenie prebehlo uspesne!");
+            //overenie podpisoveho certifikatu
+            String certValue = getNodeValue(rootElement, "ds:X509Certificate");
+            X509Certificate cert = getCert(certValue);
+
+            if (cert == null) {
+                out.println("Overenie podpisoveho certifikatu: chyba pri citani certifikatu\n");
+                return;
+            }
+
+            byte[] timestampBytes = java.util.Base64.getDecoder().decode(timestamp);
+            TimeStampToken tsToken = new TimeStampToken(
+                    new org.bouncycastle.cms.CMSSignedData(timestampBytes));
+
+            try {
+                cert.checkValidity(tsToken.getTimeStampInfo().getGenTime());
+            } catch (CertificateExpiredException e) {
+                out.println("Overenie podpisoveho certifikatu: certifikat expirovany\n");
+            } catch (CertificateNotYetValidException e) {
+                out.println("Overenie podpisoveho certifikatu: certifikat este nebol platny v case podpisu\n");
+            }
+
+            X509CRL crl = getCRL("http://test.ditec.sk/DTCCACrl/DTCCACrl.crl");
+            X509CRLEntry entry = crl.getRevokedCertificate(cert.getSerialNumber());
+            if (entry != null && entry.getRevocationDate().before(tsToken.getTimeStampInfo().getGenTime())) {
+                out.println("Overenie podpisoveho certifikatu: certifikat bol neplatny v case podpisu\n");
+                return;
+            }
+
+            out.println("Overenie preblehlo uspesne!\n");
+
 
         } catch (Exception e) {
             out.println(e);
@@ -156,13 +219,105 @@ public class Overuj extends HttpServlet {
         return hasCorrectAttributes && hasCorrectNamespaces;
     }
 
-    private byte[] getTimeStampSignatureCertificate(byte[] tsResponse) {
+    private X509CRL getCRL(String url) throws IOException {
+
+        ByteArrayInputStream crlData = getDataFromUrl(url);
+
+        if (crlData == null){
+            throw new ServerException("Nepodarilo sa stiahnut CRL zo stranky.");
+        }
+
         try {
-            TimeStampResponse tsResp = new TimeStampResponse(tsResponse);
+            X509CRLHolder crlHolder = new X509CRLHolder(crlData);
+            return new JcaX509CRLConverter().getCRL(crlHolder);
+
+        } catch (CRLException | IOException e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
+    private ByteArrayInputStream getDataFromUrl(String url) {
+
+        URL urlHandler = null;
+        try {
+            urlHandler = new URL(url);
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        }
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        InputStream is = null;
+        try {
+            is = urlHandler.openStream();
+            byte[] byteChunk = new byte[4096];
+            int n;
+
+            while ( (n = is.read(byteChunk)) > 0 ) {
+                baos.write(byteChunk, 0, n);
+            }
+        }
+        catch (IOException e) {
+            System.err.printf ("Failed while reading bytes from %s: %s", urlHandler.toExternalForm(), e.getMessage());
+            return null;
+        }
+        finally {
+            if (is != null) {
+                try {
+                    is.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        return new ByteArrayInputStream(baos.toByteArray());
+    }
+
+    public String checkMessageImprint(byte[] tsResponse, Element root) throws ServletException, CMSException, TSPException, IOException {
+        try {
             TimeStampToken token = new TimeStampToken(
-                    new org.bouncycastle.cms.CMSSignedData(tsResp.getTimeStampToken().getEncoded()));
+                    new org.bouncycastle.cms.CMSSignedData(tsResponse));
+
+            byte[] MI = token.getTimeStampInfo().getMessageImprintDigest();
+            String alghoritm = token.getTimeStampInfo().getHashAlgorithm().getAlgorithm().getId();
+            String signatureValue = getNodeValue(root, "ds:SignatureValue");
+
+            if (signatureValue.isEmpty()){
+                return "Overenie casovej peciatky: SignatureValue nebol najdeny";
+            }
+
+            byte[] signatureValueBytes = java.util.Base64.getDecoder().decode(signatureValue.getBytes());
+
+            Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
+
+            MessageDigest messageDigest = null;
+            try {
+                messageDigest = MessageDigest.getInstance(alghoritm, "BC");
+            } catch (NoSuchAlgorithmException | NoSuchProviderException e) {
+                return "Overenie casovej peciatky: neznamy algoritmus v MI.";
+            }
+
+            if (!Arrays.equals(MI, messageDigest.digest(signatureValueBytes))){
+                return "Overenie casovej peciatky: MI z casovej peciatky a podpis v SignatureValue sa nezhoduju.";
+            }
+
+            return "uspech";
+
+        } catch (IOException | CMSException | TSPException ex) {
+            return null;
+        }
+
+    }
+
+    private X509CertificateHolder getTimeStampSignatureCertificate(byte[] tsResponse) {
+        try {
+            TimeStampToken token = new TimeStampToken(
+                    new org.bouncycastle.cms.CMSSignedData(tsResponse));
             X509CertificateHolder signerCert = null;
-            X509Store x509Certs = (X509Store) tsResp.getTimeStampToken().getCertificates();
+
+            Store<X509CertificateHolder> x509Certs = token.getCertificates();
             List<X509CertificateHolder> certs = new ArrayList<>(x509Certs.getMatches(null));
 
             // nájdenie podpisového certifikátu tokenu v kolekcii
@@ -178,9 +333,25 @@ public class Overuj extends HttpServlet {
                 }
             }
 
-            return signerCert.getEncoded();
+            return signerCert;
         } catch (IOException | CMSException | TSPException ex) {
             return null;
         }
+    }
+
+    private X509Certificate getCert(String cert) {
+
+        try {
+            byte[] certificateBytes = java.util.Base64.getDecoder().decode(cert);
+
+            CertificateFactory certFactory = CertificateFactory.getInstance("X.509");
+
+            return (X509Certificate) certFactory.generateCertificate(new ByteArrayInputStream(certificateBytes));
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return null;
     }
 }
