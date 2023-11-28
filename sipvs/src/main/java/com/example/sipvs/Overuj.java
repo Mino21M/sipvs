@@ -65,6 +65,7 @@ public class Overuj extends HttpServlet {
                 return;
             }
 
+            // xml signature check
             // SignatureMethod & CanonicalizationMethod check
             String signatureMethod = getAttributeValue(rootElement, "ds:SignatureMethod", "Algorithm");
             String canonicalizationMethod = getAttributeValue(rootElement, "ds:CanonicalizationMethod", "Algorithm");
@@ -83,6 +84,42 @@ public class Overuj extends HttpServlet {
                     !canonicalizationMethod.equals("http://www.w3.org/TR/2001/REC-xml-c14n-20010315")) {
 
                 out.println("overenie xml signature: nespravny SignatureMethod alebo CanonicalizationMethod\n");
+                return;
+            }
+
+            SignatureValidation signatureValidator = new SignatureValidation(document);
+
+            try {
+                //Elementy ds:Transforms a ds:DigestMethod
+                signatureValidator.verifyTransformsAndDigestMethod();
+
+                //Core validation
+                signatureValidator.verifyCoreReferencesAndDigestValue();
+                signatureValidator.verifyCoreSignatureValue();
+
+                //Element ds:Signature:
+                signatureValidator.verifySignature();
+
+                //Element ds:SignatureValue
+                signatureValidator.verifySignatureValueId();
+
+                //Referencie v Signedinfo
+                signatureValidator.verifySignedInfoReferencesAndAttributeValues();
+
+                //Element ds:KeyInfo
+                signatureValidator.verifyKeyInfoContent();
+
+                //Element ds:SignatureProperties
+                signatureValidator.verifySignaturePropertiesContent();
+
+                //Elementy ds:Manifest
+                signatureValidator.verifyManifestElements();
+
+                //Referencie ds:Manifest elementov
+                signatureValidator.verifyManifestElementsReferences();
+
+            } catch (Exception e) {
+                out.println(e);
                 return;
             }
 
@@ -117,9 +154,9 @@ public class Overuj extends HttpServlet {
                     return;
                 }
 
-
             } catch (Exception e) {
                 out.println(e);
+                return;
             }
 
             //overenie podpisoveho certifikatu

@@ -2,7 +2,6 @@ package com.example.sipvs;
 
 import org.bouncycastle.asn1.ASN1InputStream;
 import org.bouncycastle.asn1.ASN1Sequence;
-import org.bouncycastle.asn1.x509.Certificate;
 import org.bouncycastle.jce.provider.X509CertificateObject;
 import org.bouncycastle.util.encoders.Base64;
 import org.w3c.dom.Document;
@@ -12,6 +11,10 @@ import org.w3c.dom.NodeList;
 import javax.xml.xpath.XPathExpressionException;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.security.cert.Certificate;
+import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
+import java.security.cert.X509Certificate;
 
 public class Finder {
     private Document document;
@@ -30,7 +33,7 @@ public class Finder {
         return null;
     }
 
-    public X509CertificateObject getCertificate() throws XPathExpressionException, DocumentVerificationException {
+    public X509Certificate getCertificate() throws XPathExpressionException, DocumentVerificationException {
 
         Element keyInfoElement = (Element) document.getElementsByTagName("ds:KeyInfo").item(0);
 
@@ -50,21 +53,25 @@ public class Finder {
             throw new DocumentVerificationException("Chyba pri ziskavani certifikatu: Dokument neobsahuje element ds:X509Certificate");
         }
 
-        X509CertificateObject certObject = null;
-        ASN1InputStream inputStream = null;
+        X509Certificate certObject = null;
+        // ASN1InputStream inputStream = null;
 
         try {
-            inputStream = new ASN1InputStream(new ByteArrayInputStream(Base64.decode(x509Certificate.getTextContent())));
-            ASN1Sequence sequence = (ASN1Sequence) inputStream.readObject();
-            certObject = new X509CertificateObject(Certificate.getInstance(sequence));
+            //inputStream = new ASN1InputStream(new ByteArrayInputStream(Base64.decode(x509Certificate.getTextContent())));
+            //ASN1Sequence sequence = (ASN1Sequence) inputStream.readObject();
 
-        } catch (IOException | java.security.cert.CertificateParsingException e) {
+            String base64Certificate = x509Certificate.getTextContent();
+            byte[] certificateBytes = java.util.Base64.getDecoder().decode(base64Certificate);
+
+            CertificateFactory certificateFactory = CertificateFactory.getInstance("X.509");
+            certObject = (X509Certificate) certificateFactory.generateCertificate(new ByteArrayInputStream(certificateBytes));
+
+        } catch (java.security.cert.CertificateParsingException e) {
 
             throw new DocumentVerificationException("Certifikát nebolo možné načítať", e);
 
-        } finally {
-
-            closeQuietly(inputStream);
+        } catch (CertificateException e) {
+            throw new RuntimeException(e);
         }
 
         return certObject;

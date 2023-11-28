@@ -18,8 +18,6 @@ public abstract class Verification {
         this.document = document;
         this.finder = new Finder(document);
 
-        org.apache.xml.security.Init.init();
-        Security.addProvider(new BouncyCastleProvider());
     }
 
     protected boolean assertElementAttributeValue(Element element, String attribute, String expectedValue) {
